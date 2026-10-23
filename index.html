@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>球面上の小円に沿う平行移動</title>
+<style>
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;
+    background:#f5f5f7;
+    color:#111827;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:16px}
+  h1{font-size:clamp(22px,5vw,32px);margin:0 0 8px}
+  p{margin:0 0 16px;color:#4b5563;line-height:1.6}
+  .card{
+    background:#fff;border:1px solid #d1d5db;border-radius:16px;
+    padding:12px;margin-bottom:14px
+  }
+  svg{display:block;width:100%;height:auto;background:#fff;border-radius:12px}
+  .controls{display:grid;gap:14px}
+  label{display:block;font-size:15px;margin-bottom:5px}
+  input[type=range]{width:100%;min-height:40px}
+  .buttons{display:flex;flex-wrap:wrap;gap:8px}
+  button{
+    min-height:46px;padding:8px 14px;border-radius:11px;
+    border:1px solid #cbd5e1;background:#fff;color:#111827;font-size:16px
+  }
+  button.primary{background:#2563eb;color:white;border-color:#2563eb}
+  .stats{
+    display:grid;grid-template-columns:110px 1fr;gap:6px 8px;
+    font-size:14px;line-height:1.5
+  }
+  .muted{color:#6b7280}
+  .formula{
+    margin-top:10px;padding:10px;border:1px solid #e5e7eb;
+    border-radius:10px;background:#f8fafc;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:13px;white-space:pre-wrap
+  }
+  .legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:8px;font-size:13px;color:#4b5563}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>球面上の小円に沿う平行移動</h1>
+  <p>赤い矢印 X が平行移動される接ベクトルです。青と緑は局所基底 e₁, e₂ です。</p>
+
+  <section class="card">
+    <svg id="svg" viewBox="0 0 720 520" role="img" aria-label="球面上の平行移動アニメーション">
+      <rect width="720" height="520" fill="#ffffff"/>
+      <circle cx="300" cy="250" r="180" fill="none" stroke="#cbd5e1" stroke-width="2"/>
+      <g id="grid"></g>
+      <path id="smallCircle" fill="none" stroke="#64748b" stroke-width="2" stroke-dasharray="6 6"/>
+      <path id="travelPath" fill="none" stroke="#7c3aed" stroke-width="5" stroke-linecap="round"/>
+      <circle id="point" r="7" fill="#111827" stroke="#ffffff" stroke-width="3"/>
+
+      <g>
+        <line id="e1Line" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
+        <polygon id="e1Head" fill="#2563eb"/>
+        <text id="e1Label" fill="#2563eb" font-size="18">e₁</text>
+      </g>
+      <g>
+        <line id="e2Line" stroke="#16a34a" stroke-width="4" stroke-linecap="round"/>
+        <polygon id="e2Head" fill="#16a34a"/>
+        <text id="e2Label" fill="#16a34a" font-size="18">e₂</text>
+      </g>
+      <g>
+        <line id="xLine" stroke="#dc2626" stroke-width="6" stroke-linecap="round"/>
+        <polygon id="xHead" fill="#dc2626"/>
+        <text id="xLabel" fill="#dc2626" font-size="20">X</text>
+      </g>
+
+      <g transform="translate(500 70)">
+        <rect x="0" y="0" width="185" height="190" rx="10" fill="#f8fafc" stroke="#d1d5db"/>
+        <text x="15" y="26" font-size="15" fill="#111827">局所基底で見た回転</text>
+        <line x1="25" y1="105" x2="160" y2="105" stroke="#9ca3af"/>
+        <line x1="92" y1="38" x2="92" y2="172" stroke="#9ca3af"/>
+        <circle cx="92" cy="105" r="52" fill="none" stroke="#cbd5e1"/>
+        <line id="coefLine" x1="92" y1="105" x2="144" y2="105" stroke="#dc2626" stroke-width="5" stroke-linecap="round"/>
+        <circle id="coefPoint" cx="144" cy="105" r="5" fill="#dc2626"/>
+        <text x="152" y="98" font-size="14" fill="#64748b">ξ¹</text>
+        <text x="100" y="50" font-size="14" fill="#64748b">ξ²</text>
+        <text id="thetaText" x="16" y="180" font-size="14" fill="#111827">θ = 0°</text>
+      </g>
+
+      <text id="caption" x="35" y="485" font-size="18" fill="#111827">u = 35°, v = 0°</text>
+    </svg>
+    <div class="legend">
+      <span><span class="dot" style="background:#dc2626"></span>X</span>
+      <span><span class="dot" style="background:#2563eb"></span>e₁</span>
+      <span><span class="dot" style="background:#16a34a"></span>e₂</span>
+      <span><span class="dot" style="background:#7c3aed"></span>移動経路</span>
+    </div>
+  </section>
+
+  <section class="card controls">
+    <div>
+      <label>緯度 u = <span id="uText">35°</span></label>
+      <input id="uSlider" type="range" min="-70" max="70" value="35" step="1">
+    </div>
+
+    <div>
+      <label>位置 v = <span id="vText">0°</span></label>
+      <input id="vSlider" type="range" min="-180" max="180" value="0" step="1">
+    </div>
+
+    <div>
+      <label>再生速度</label>
+      <input id="speedSlider" type="range" min="0.4" max="2.5" value="1" step="0.1">
+    </div>
+
+    <div class="buttons">
+      <button id="playPlus" class="primary" type="button">0 → π</button>
+      <button id="playMinus" class="primary" type="button">0 → −π</button>
+      <button id="pause" type="button">停止</button>
+      <button id="reset" type="button">リセット</button>
+    </div>
+
+    <div class="stats">
+      <div class="muted">λ = sin u</div><div id="lambdaText"></div>
+      <div class="muted">回転角 θ</div><div id="thetaOut"></div>
+      <div class="muted">ξ¹</div><div id="xi1Text"></div>
+      <div class="muted">ξ²</div><div id="xi2Text"></div>
+    </div>
+
+    <div class="formula">X(v) = cos((sin u)v)e₁(v)
+     − sin((sin u)v)e₂(v)
+
+θ(v) = −(sin u)v</div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const root = document;
+  const grid = root.getElementById('grid');
+  const smallCircle = root.getElementById('smallCircle');
+  const travelPath = root.getElementById('travelPath');
+  const pointEl = root.getElementById('point');
+  const uSlider = root.getElementById('uSlider');
+  const vSlider = root.getElementById('vSlider');
+  const speedSlider = root.getElementById('speedSlider');
+
+  let raf = null, running = false, last = 0;
+  const rad = d => d*Math.PI/180;
+  const deg = r => r*180/Math.PI;
+
+  function p3(u,v){
+    return [Math.cos(u)*Math.cos(v), Math.cos(u)*Math.sin(v), Math.sin(u)];
+  }
+  function basis(u,v){
+    return {
+      e1:[-Math.sin(v), Math.cos(v), 0],
+      e2:[-Math.sin(u)*Math.cos(v), -Math.sin(u)*Math.sin(v), Math.cos(u)]
+    };
+  }
+  const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+  const mul=(s,a)=>[s*a[0],s*a[1],s*a[2]];
+  const norm=a=>Math.hypot(a[0],a[1],a[2])||1;
+  const unit=a=>{const n=norm(a); return [a[0]/n,a[1]/n,a[2]/n]};
+
+  function camera(p){
+    const ay=-0.65, ax=0.28;
+    const cy=Math.cos(ay), sy=Math.sin(ay);
+    const x1=cy*p[0]+sy*p[2], y1=p[1], z1=-sy*p[0]+cy*p[2];
+    const cx=Math.cos(ax), sx=Math.sin(ax);
+    return [x1, cx*y1-sx*z1, sx*y1+cx*z1];
+  }
+  function project(p){
+    const q=camera(p), s=180;
+    return [300+s*q[0], 250-s*q[2]];
+  }
+  function pathFrom(points){
+    return points.map((p,i)=>{const q=project(p); return (i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)}).join(' ');
+  }
+
+  function makeGrid(){
+    const ns='http://www.w3.org/2000/svg';
+    [-60,-30,0,30,60].forEach(d=>{
+      const pts=[]; for(let i=0;i<=120;i++) pts.push(p3(rad(d),-Math.PI+i*2*Math.PI/120));
+      const path=document.createElementNS(ns,'path');
+      path.setAttribute('d',pathFrom(pts));
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke','#94a3b8');
+      path.setAttribute('stroke-width','1');
+      path.setAttribute('stroke-dasharray','4 5');
+      path.setAttribute('opacity','0.55');
+      grid.appendChild(path);
+    });
+    for(let k=0;k<6;k++){
+      const vv=k*Math.PI/6, pts=[];
+      for(let i=0;i<=100;i++) pts.push(p3(-Math.PI/2+i*Math.PI/100,vv));
+      const path=document.createElementNS(ns,'path');
+      path.setAttribute('d',pathFrom(pts));
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke','#94a3b8');
+      path.setAttribute('stroke-width','1');
+      path.setAttribute('stroke-dasharray','4 5');
+      path.setAttribute('opacity','0.55');
+      grid.appendChild(path);
+    }
+  }
+
+  function setArrow(prefix,p,v,len){
+    const a=project(p), b=project(add(p,mul(len,unit(v))));
+    const line=root.getElementById(prefix+'Line');
+    const head=root.getElementById(prefix+'Head');
+    const label=root.getElementById(prefix+'Label');
+    line.setAttribute('x1',a[0]); line.setAttribute('y1',a[1]);
+    line.setAttribute('x2',b[0]); line.setAttribute('y2',b[1]);
+    const ang=Math.atan2(b[1]-a[1],b[0]-a[0]), h=12;
+    const p1=[b[0],b[1]];
+    const p2=[b[0]-h*Math.cos(ang-0.5), b[1]-h*Math.sin(ang-0.5)];
+    const p3h=[b[0]-h*Math.cos(ang+0.5), b[1]-h*Math.sin(ang+0.5)];
+    head.setAttribute('points',p1.join(',')+' '+p2.join(',')+' '+p3h.join(','));
+    label.setAttribute('x',b[0]+8); label.setAttribute('y',b[1]-8);
+  }
+
+  function render(){
+    const u=rad(Number(uSlider.value)), v=rad(Number(vSlider.value));
+    const lambda=Math.sin(u), b=basis(u,v);
+    const xi1=Math.cos(lambda*v), xi2=-Math.sin(lambda*v);
+    const X=add(mul(xi1,b.e1),mul(xi2,b.e2));
+    const p=p3(u,v), q=project(p);
+
+    const full=[]; for(let i=0;i<=180;i++) full.push(p3(u,-Math.PI+i*2*Math.PI/180));
+    smallCircle.setAttribute('d',pathFrom(full));
+
+    const n=Math.max(2,Math.ceil(Math.abs(v)/Math.PI*120));
+    const traveled=[]; for(let i=0;i<=n;i++) traveled.push(p3(u,v*i/n));
+    travelPath.setAttribute('d',pathFrom(traveled));
+
+    pointEl.setAttribute('cx',q[0]); pointEl.setAttribute('cy',q[1]);
+    setArrow('e1',p,b.e1,0.27);
+    setArrow('e2',p,b.e2,0.27);
+    setArrow('x',p,X,0.44);
+
+    const theta=-lambda*v;
+    const cx=92, cy=105, R=52, ex=cx+R*xi1, ey=cy-R*xi2;
+    root.getElementById('coefLine').setAttribute('x2',ex);
+    root.getElementById('coefLine').setAttribute('y2',ey);
+    root.getElementById('coefPoint').setAttribute('cx',ex);
+    root.getElementById('coefPoint').setAttribute('cy',ey);
+
+    root.getElementById('uText').textContent=Number(uSlider.value).toFixed(0)+'°';
+    root.getElementById('vText').textContent=Number(vSlider.value).toFixed(0)+'°';
+    root.getElementById('lambdaText').textContent=lambda.toFixed(4);
+    root.getElementById('thetaOut').textContent=deg(theta).toFixed(2)+'°';
+    root.getElementById('xi1Text').textContent=xi1.toFixed(4);
+    root.getElementById('xi2Text').textContent=xi2.toFixed(4);
+    root.getElementById('thetaText').textContent='θ = '+deg(theta).toFixed(1)+'°';
+    root.getElementById('caption').textContent='u = '+Number(uSlider.value).toFixed(0)+'°,   v = '+Number(vSlider.value).toFixed(0)+'°';
+  }
+
+  function stop(){
+    running=false; last=0;
+    if(raf){cancelAnimationFrame(raf); raf=null;}
+  }
+
+  function play(dir){
+    stop(); vSlider.value='0'; render(); running=true;
+    const target=dir>0?180:-180;
+    function tick(t){
+      if(!running) return;
+      if(!last) last=t;
+      const dt=Math.min(0.05,(t-last)/1000); last=t;
+      let v=Number(vSlider.value)+dir*45*Number(speedSlider.value)*dt;
+      if((dir>0&&v>=target)||(dir<0&&v<=target)){
+        v=target; vSlider.value=String(v); render(); stop(); return;
+      }
+      vSlider.value=String(v); render();
+      raf=requestAnimationFrame(tick);
+    }
+    raf=requestAnimationFrame(tick);
+  }
+
+  root.getElementById('playPlus').addEventListener('click',()=>play(1));
+  root.getElementById('playMinus').addEventListener('click',()=>play(-1));
+  root.getElementById('pause').addEventListener('click',stop);
+  root.getElementById('reset').addEventListener('click',()=>{stop();vSlider.value='0';render()});
+  uSlider.addEventListener('input',()=>{stop();render()});
+  vSlider.addEventListener('input',()=>{stop();render()});
+
+  makeGrid();
+  render();
+})();
+</script>
+</body>
+</html>
